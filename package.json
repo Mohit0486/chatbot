@@ -1,0 +1,28 @@
+{
+  "name": "ai-agent-builder-platform",
+  "version": "1.0.0",
+  "description": "Production-ready SaaS platform for chatbot and voice AI agent orchestration",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace web",
+    "dev:api": "npm run start:dev --workspace api",
+    "build:web": "npm run build --workspace web",
+    "build:api": "npm run build --workspace api",
+    "lint:web": "npm run lint --workspace web",
+    "lint:api": "npm run lint --workspace api",
+    "prisma:generate": "npm run prisma:generate --workspace api",
+    "prisma:push": "npm run prisma:push --workspace api"
+  },
+  "repository": "github:Mohit0486/chatbot",
+  "keywords": [],
+  "author": "AI Agent Builder",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Mohit0486/chatbot/issues"
+  },
+  "homepage": "https://github.com/Mohit0486/chatbot#readme"
+}

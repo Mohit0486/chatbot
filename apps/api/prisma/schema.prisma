@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum KnowledgeSource {
+  PDF
+  URL
+  TEXT
+}
+
+enum ConversationType {
+  CHAT
+  VOICE
+}
+
+enum MessageSender {
+  USER
+  BOT
+  AGENT
+  SYSTEM
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum ChannelType {
+  WEBSITE_WIDGET
+  WHATSAPP
+  VOICE_CALL
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum UsageEvent {
+  MESSAGE
+  VOICE_MINUTE
+  LEAD_CAPTURED
+}
+
+model User {
+  id           String             @id @default(cuid())
+  name         String
+  email        String             @unique
+  passwordHash String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  memberships  WorkspaceMember[]
+  messages     ConversationMessage[] @relation("AgentReplies")
+}
+
+model Workspace {
+  id              String             @id @default(cuid())
+  name            String
+  slug            String             @unique
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  members         WorkspaceMember[]
+  chatbots        Chatbot[]
+  knowledgeDocs   KnowledgeDocument[]
+  voiceAgents     VoiceAgent[]
+  voiceCalls      VoiceCall[]
+  leads           Lead[]
+  conversations   Conversation[]
+  subscriptions   Subscription[]
+  usageMetrics    UsageMetric[]
+  channels        DeploymentChannel[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model Chatbot {
+  id                 String               @id @default(cuid())
+  workspaceId        String
+  name               String
+  description        String?
+  systemPrompt       String
+  flowDefinition     Json?
+  model              String               @default("gpt-4o-mini")
+  isPublished        Boolean              @default(false)
+  websiteWidgetToken String?              @unique
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  workspace          Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  knowledgeDocuments KnowledgeDocument[]
+  conversations      Conversation[]
+}
+
+model KnowledgeDocument {
+  id           String          @id @default(cuid())
+  workspaceId  String
+  chatbotId    String
+  title        String
+  sourceType   KnowledgeSource
+  sourceUrl    String?
+  rawText      String?
+  indexed      Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  chatbot      Chatbot         @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  workspace    Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model VoiceAgent {
+  id                  String       @id @default(cuid())
+  workspaceId         String
+  name                String
+  systemPrompt        String
+  voiceProvider       String       @default("elevenlabs")
+  voiceId             String
+  llmModel            String       @default("gpt-4o-mini")
+  deepgramModel       String       @default("nova-2")
+  incomingPhoneNumber String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  workspace           Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  calls               VoiceCall[]
+  conversations       Conversation[]
+}
+
+model VoiceCall {
+  id             String        @id @default(cuid())
+  workspaceId    String
+  voiceAgentId   String
+  direction      CallDirection
+  twilioCallSid  String?       @unique
+  fromNumber     String
+  toNumber       String
+  durationSec    Int           @default(0)
+  transcript     String?
+  leadId         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  voiceAgent     VoiceAgent    @relation(fields: [voiceAgentId], references: [id], onDelete: Cascade)
+  lead           Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id             String                @id @default(cuid())
+  workspaceId    String
+  chatbotId      String?
+  voiceAgentId   String?
+  type           ConversationType
+  externalUserId String?
+  leadId         String?
+  startedAt      DateTime              @default(now())
+  endedAt        DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  workspace      Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  chatbot        Chatbot?              @relation(fields: [chatbotId], references: [id], onDelete: SetNull)
+  voiceAgent     VoiceAgent?           @relation(fields: [voiceAgentId], references: [id], onDelete: SetNull)
+  lead           Lead?                 @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  messages       ConversationMessage[]
+}
+
+model ConversationMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  sender         MessageSender
+  content        String
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  repliedById    String?
+  repliedBy      User?        @relation("AgentReplies", fields: [repliedById], references: [id], onDelete: SetNull)
+}
+
+model Lead {
+  id             String         @id @default(cuid())
+  workspaceId    String
+  fullName       String?
+  email          String?
+  phone          String?
+  company        String?
+  source         String
+  status         LeadStatus     @default(NEW)
+  notes          String?
+  lastActivityAt DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  workspace      Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  conversations  Conversation[]
+  calls          VoiceCall[]
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  workspaceId          String
+  stripeCustomerId     String?
+  stripeSubscriptionId String?            @unique
+  planName             String
+  status               SubscriptionStatus @default(TRIALING)
+  seats                Int                @default(1)
+  messageLimit         Int                @default(1000)
+  voiceMinuteLimit     Int                @default(200)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  workspace            Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model UsageMetric {
+  id          String     @id @default(cuid())
+  workspaceId String
+  event       UsageEvent
+  quantity    Int        @default(1)
+  recordedAt  DateTime   @default(now())
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model DeploymentChannel {
+  id          String      @id @default(cuid())
+  workspaceId String
+  name        String
+  type        ChannelType
+  config      Json
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
