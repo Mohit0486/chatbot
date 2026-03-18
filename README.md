@@ -126,6 +126,8 @@ npm run dev:api
 npm run dev:web
 ```
 
+Both servers bind to `0.0.0.0` by default, so Cursor port previews can connect directly on ports `4000` and `3000`.
+
 ## Frontend Pages
 
 - `/` Landing page
