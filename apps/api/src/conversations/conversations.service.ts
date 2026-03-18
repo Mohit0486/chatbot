@@ -47,7 +47,11 @@ export class ConversationsService {
     });
   }
 
-  async listMessages(userId: string, workspaceId: string, conversationId: string) {
+  async listMessages(
+    userId: string,
+    workspaceId: string,
+    conversationId: string,
+  ) {
     await this.workspacesService.assertWorkspaceMember(userId, workspaceId);
     await this.assertConversationBelongs(conversationId, workspaceId);
 
@@ -59,7 +63,10 @@ export class ConversationsService {
 
   async chat(userId: string | undefined, dto: ChatMessageDto) {
     if (userId) {
-      await this.workspacesService.assertWorkspaceMember(userId, dto.workspaceId);
+      await this.workspacesService.assertWorkspaceMember(
+        userId,
+        dto.workspaceId,
+      );
     }
     const chatbot = await this.prisma.chatbot.findFirst({
       where: {
@@ -72,11 +79,11 @@ export class ConversationsService {
       throw new NotFoundException('Chatbot not found.');
     }
 
-    const conversation =
-      dto.conversationId &&
-      (await this.prisma.conversation.findFirst({
-        where: { id: dto.conversationId, workspaceId: dto.workspaceId },
-      }));
+    const conversation = dto.conversationId
+      ? await this.prisma.conversation.findFirst({
+          where: { id: dto.conversationId, workspaceId: dto.workspaceId },
+        })
+      : null;
 
     const activeConversation =
       conversation ??
@@ -128,8 +135,16 @@ export class ConversationsService {
 
     await this.prisma.usageMetric.createMany({
       data: [
-        { workspaceId: dto.workspaceId, event: UsageEvent.MESSAGE, quantity: 1 },
-        { workspaceId: dto.workspaceId, event: UsageEvent.MESSAGE, quantity: 1 },
+        {
+          workspaceId: dto.workspaceId,
+          event: UsageEvent.MESSAGE,
+          quantity: 1,
+        },
+        {
+          workspaceId: dto.workspaceId,
+          event: UsageEvent.MESSAGE,
+          quantity: 1,
+        },
       ],
     });
 

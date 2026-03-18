@@ -46,7 +46,12 @@ export class ChatbotsController {
     @Body('workspaceId') workspaceId: string,
     @Body() dto: UpdateChatbotFlowDto,
   ) {
-    return this.chatbotsService.updateFlow(req.user.id, workspaceId, chatbotId, dto);
+    return this.chatbotsService.updateFlow(
+      req.user.id,
+      workspaceId,
+      chatbotId,
+      dto,
+    );
   }
 
   @Post(':chatbotId/knowledge')
@@ -64,6 +69,10 @@ export class ChatbotsController {
     @Param('chatbotId') chatbotId: string,
     @Body('workspaceId') workspaceId: string,
   ) {
-    return this.chatbotsService.publishWidget(req.user.id, workspaceId, chatbotId);
+    return this.chatbotsService.publishWidget(
+      req.user.id,
+      workspaceId,
+      chatbotId,
+    );
   }
 }

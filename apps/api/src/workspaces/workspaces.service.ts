@@ -119,7 +119,9 @@ export class WorkspacesService {
       membership.role !== WorkspaceRole.OWNER &&
       membership.role !== WorkspaceRole.ADMIN
     ) {
-      throw new ForbiddenException('Only workspace admins can perform this action.');
+      throw new ForbiddenException(
+        'Only workspace admins can perform this action.',
+      );
     }
   }
 }

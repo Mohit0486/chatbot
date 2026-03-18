@@ -34,7 +34,11 @@ export class VoiceAgentsService {
     });
   }
 
-  async initiateCall(userId: string, voiceAgentId: string, dto: InitiateCallDto) {
+  async initiateCall(
+    userId: string,
+    voiceAgentId: string,
+    dto: InitiateCallDto,
+  ) {
     await this.workspacesService.assertWorkspaceMember(userId, dto.workspaceId);
     const agent = await this.prisma.voiceAgent.findFirst({
       where: { id: voiceAgentId, workspaceId: dto.workspaceId },

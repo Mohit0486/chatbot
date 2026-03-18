@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ChannelType } from '@prisma/client';
+import { ChannelType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { UpsertChannelDto } from './dto/channel.dto';
@@ -28,7 +28,11 @@ export class ChannelsService {
     if (existing) {
       return this.prisma.deploymentChannel.update({
         where: { id: existing.id },
-        data: { name: dto.name, config: dto.config, isActive: true },
+        data: {
+          name: dto.name,
+          config: dto.config as Prisma.InputJsonValue,
+          isActive: true,
+        },
       });
     }
 
@@ -37,7 +41,7 @@ export class ChannelsService {
         workspaceId: dto.workspaceId,
         name: dto.name,
         type: dto.type,
-        config: dto.config,
+        config: dto.config as Prisma.InputJsonValue,
       },
     });
   }

@@ -76,11 +76,11 @@ export class BillingService {
         messages:
           usage.find((x) => x.event === UsageEvent.MESSAGE)?._sum.quantity ?? 0,
         voiceMinutes:
-          usage.find((x) => x.event === UsageEvent.VOICE_MINUTE)?._sum.quantity ??
-          0,
+          usage.find((x) => x.event === UsageEvent.VOICE_MINUTE)?._sum
+            .quantity ?? 0,
         leads:
-          usage.find((x) => x.event === UsageEvent.LEAD_CAPTURED)?._sum.quantity ??
-          0,
+          usage.find((x) => x.event === UsageEvent.LEAD_CAPTURED)?._sum
+            .quantity ?? 0,
       },
     };
   }
@@ -97,14 +97,20 @@ export class BillingService {
     );
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
+      const session = event.data.object;
       const workspaceId = session.metadata?.workspaceId;
       if (workspaceId) {
+        const stripeCustomerId =
+          typeof session.customer === 'string' ? session.customer : undefined;
+        const stripeSubscriptionId =
+          typeof session.subscription === 'string'
+            ? session.subscription
+            : undefined;
         await this.prisma.subscription.create({
           data: {
             workspaceId,
-            stripeCustomerId: session.customer?.toString(),
-            stripeSubscriptionId: session.subscription?.toString(),
+            stripeCustomerId,
+            stripeSubscriptionId,
             planName: session.metadata?.planName ?? 'Pro',
             status: SubscriptionStatus.ACTIVE,
           },

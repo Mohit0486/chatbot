@@ -1,7 +1,13 @@
 import { PrismaClient, WorkspaceRole } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const connectionString =
+  process.env.DATABASE_URL ??
+  'postgresql://postgres:postgres@localhost:5432/ai_agent_builder?schema=public';
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString }),
+});
 
 async function main() {
   const email = 'owner@demo.ai';

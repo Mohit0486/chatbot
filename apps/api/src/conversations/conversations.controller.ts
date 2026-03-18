@@ -54,7 +54,10 @@ export class ConversationsController {
   }
 
   @Post('chat')
-  chat(@Req() req: Request & { user?: AuthenticatedUser }, @Body() dto: ChatMessageDto) {
+  chat(
+    @Req() req: Request & { user?: AuthenticatedUser },
+    @Body() dto: ChatMessageDto,
+  ) {
     return this.conversationsService.chat(req.user?.id, dto);
   }
 

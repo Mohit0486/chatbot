@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { OpenAI } from 'openai';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
@@ -57,7 +58,7 @@ export class ChatbotsService {
     return this.prisma.chatbot.update({
       where: { id: chatbotId },
       data: {
-        flowDefinition: dto.flowDefinition,
+        flowDefinition: dto.flowDefinition as Prisma.InputJsonValue,
       },
     });
   }

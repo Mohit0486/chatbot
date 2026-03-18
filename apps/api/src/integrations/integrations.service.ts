@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CallDirection, ConversationType, MessageSender, UsageEvent } from '@prisma/client';
+import {
+  CallDirection,
+  ConversationType,
+  MessageSender,
+  UsageEvent,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()

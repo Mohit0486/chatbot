@@ -14,8 +14,10 @@ type OverviewResponse = {
 
 export default function DashboardOverviewPage() {
   const [data, setData] = useState<OverviewResponse | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const workspaceId = getWorkspaceId();
     if (!workspaceId) return;
     api
@@ -67,13 +69,15 @@ export default function DashboardOverviewPage() {
           <CardTitle>Usage Breakdown</CardTitle>
         </CardHeader>
         <CardContent className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <XAxis dataKey="label" />
-              <YAxis />
-              <Bar dataKey="value" fill="#2563eb" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {mounted ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis dataKey="label" />
+                <YAxis />
+                <Bar dataKey="value" fill="#2563eb" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : null}
         </CardContent>
       </Card>
     </div>
